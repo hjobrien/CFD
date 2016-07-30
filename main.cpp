@@ -25,8 +25,7 @@ const vector<vector<Cell*>>& createFlatMatrix(float sideLength, int height, int 
         vector<Cell*>* row = new vector<Cell*>;
         for(int j = 0; j < width; j++){
 
-            Cell* cell = new Cell(sideLength, sideLength * j, sideLength * i, ((double) rand()) / RAND_MAX,
-            ((double) rand()) / RAND_MAX,((double) rand()) / RAND_MAX);
+            Cell* cell = new Cell(sideLength, sideLength * j, sideLength * i, (i * j) / ((double)width * height));
             row->push_back(cell);
         }
         matrix->push_back(*row);
@@ -98,9 +97,11 @@ const std::vector<GLuint>& getAllVertexArrayObjects(const vector<vector<Cell*>> 
             GLuint colorBuffer = 1;
             glGenBuffers(1, &colorBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-            double r = cell->getR();
-            double g = cell->getG();
-            double b = cell->getB();
+            std::vector<double> rgb = cell->getRgb();
+            double r = rgb[0];
+            double g = rgb[1];
+            double b = rgb[2];
+//            std::cout << r << " " << g << " " << b << "\n";
             double colorVals[] = {
                     r, g, b,
                     r, g, b,
@@ -201,8 +202,8 @@ int main(void) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(otherPoints), otherPoints, GL_STATIC_DRAW);
 
 
-//    vector<vector<Cell*>> matrix = createFlatMatrix(0.05f, 40,40);
-    vector<vector<Cell*>> matrix = createFlatMatrix(0.01f, 200, 200);
+    vector<vector<Cell*>> matrix = createFlatMatrix(0.05f, 40, 40);
+//    vector<vector<Cell*>> matrix = createFlatMatrix(0.01f, 200, 200);
 
 
     std::vector<GLuint> vertexArrayObjects = getAllVertexArrayObjects(matrix);

@@ -11,14 +11,6 @@ Cell::Cell(float sideLength, float topLeftX, float topLeftY) {
 
 }
 
-Cell::Cell(float sideLength, float topLeftX, float topLeftY, double r, double g, double b) {
-    setSize(sideLength);
-    setTopLeft(topLeftX, topLeftY);
-    this->r = r;
-    this->g = g;
-    this->b = b;
-}
-
 
 //take cell's state, copy them 4 times by value, store them in 4 new cells and add it to the container
 Container& Cell::split() {
@@ -47,6 +39,25 @@ bool Cell::canMerge() {
 Cell *Cell::cloneToSmallerCell() {
     return this->clone()->shrink();
 }
+
+std::vector<double> Cell::getRgb() {
+    return colorConverter::hslToRgb(h, s, l);
+}
+
+Cell::Cell(float sideLength, float topLeftX, float topLeftY, double density) {
+    setTopLeft(topLeftX, topLeftY);
+    setSize(sideLength);
+    this->density = density;
+    this->h = density * 250 / 360;
+    this->s = 1;
+    this->l = 0.5;
+//    std::cout << density << " " << h << " " << s << " " << l << "\n";
+
+}
+
+
+
+
 
 
 

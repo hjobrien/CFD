@@ -8,6 +8,7 @@
 class Container;
 #include "Node.h"
 #include "Container.h"
+#include "ColorConverter.cpp"
 
 class Cell : public Node{
 
@@ -15,7 +16,8 @@ public:
 
     Cell(float sideLength, float topLeftX, float topLeftY);
 
-    Cell(float sideLength, float topLeftX, float topLeftY, double r, double g, double b);
+    Cell(float sideLength, float topLeftX, float topLeftY, double density);
+
 
     Node* update();
 
@@ -26,17 +28,7 @@ public:
 
     Cell* cloneToSmallerCell();
 
-    double getR(){
-        return r;
-    }
-
-    double getG(){
-        return g;
-    }
-
-    double getB(){
-        return b;
-    }
+    std::vector<double> getRgb();
 
 
 
@@ -49,7 +41,7 @@ private:
     bool ableToMerge = true;
     bool willSplit = true;
 
-    double r,g,b;
+    double h, s, l;
 
 
     double density;
