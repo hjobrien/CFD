@@ -29,10 +29,10 @@ namespace colorConverter {
     * Assumes h, s, and l are contained in the set [0, 1] and
     * returns r, g, and b in the set [0, 255].
     *
-    * @param   {number}  h       The hue
-    * @param   {number}  s       The saturation
-    * @param   {number}  l       The lightness
-    * @return  {Array}           The RGB representation
+    * @param   {double}  h                  The hue
+    * @param   {double}  s                  The saturation
+    * @param   {double}  l                  The lightness
+    * @return  {std::vector<int>}           The RGB representation
     */
     static const std::vector<double>& hslToRgb(double h, double s, double l) {
         double r, g, b;

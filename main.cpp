@@ -17,6 +17,17 @@ using std::vector;
 
 const int appSize = 900;    //my screen height
 
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+{
+    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos); //sets pos values by modifying their references?
+        std::cout << xpos << " " << ypos << "\n";
+    }
+}
+
+
 const vector<vector<Cell*>>& createFlatMatrix(float sideLength, int height, int width)
 {
     vector<vector<Cell*>>* matrix = new vector<vector<Cell*>>;
@@ -50,7 +61,7 @@ const std::vector<float>& getCoords(Cell* cell){
 //static unsigned int vertexBufferUniqueID = 0;
 
 
-//std::vector<GLuint*> getAllVertexArrayObjects(const Node &root){
+//std::vector<GLuint*> getMeshVertexArrayObjects(const Node &root){
 //    std::vector<GLuint*> allVAOs;
 //    std::vector<Node*> subNodes = root.getSubNodesAsList();
 //    for(int i = 0; i < subNodes.size(); i++){
@@ -77,7 +88,7 @@ const std::vector<float>& getCoords(Cell* cell){
 //}
 
 
-const std::vector<GLuint>& getAllVertexArrayObjects(const vector<vector<Cell*>> matrix)
+const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>> matrix)
 {
     vector<GLuint>* allVAOs = new vector<GLuint>;
     for(vector<Cell*> row : matrix)
@@ -91,7 +102,6 @@ const std::vector<GLuint>& getAllVertexArrayObjects(const vector<vector<Cell*>> 
 //            std::cout << (*points)[0] << " " << (*points)[1] << " " << (*points)[2] << "\n" <<
 //                    (*points)[3] << " " << (*points)[4] << " " << (*points)[5] << "\n" <<
 //                    (*points)[6] << " " << (*points)[7] << " " << (*points)[8] << "\n" <<
-//                    (*points)[9] << " " << (*points)[10] << " " << (*points)[11] << "\n\n";
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (*points).size(), &((*points)[0]), GL_STATIC_DRAW);
 
             GLuint colorBuffer = 1;
@@ -145,7 +155,7 @@ int main(void) {
 
     /* Initialize the library */
     if (!glfwInit()) {
-    return -1;
+        return -1;
     }
     const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
@@ -159,7 +169,6 @@ int main(void) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     /* Create a windowed mode window and its OpenGL context */
-//    std::printf("width:%d height:%d", mode->width, mode->height);
     window = glfwCreateWindow(mode->height, mode->height, "CFD", NULL, NULL);
     if (!window)
     {
@@ -196,17 +205,28 @@ int main(void) {
                    -0.1f, 0.1f, 0.0f
             };
 
+    double otherColors[] =
+            {
+                    1, 1, 1,
+                    1, 1, 1,
+                    1, 1, 1
+            };
+
     GLuint otherVbo = 1;
     glGenBuffers(1, &otherVbo);
     glBindBuffer(GL_ARRAY_BUFFER, otherVbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(otherPoints), otherPoints, GL_STATIC_DRAW);
 
+    GLuint otherColorBuffer = 1;
+    glGenBuffers(1, &otherColorBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, otherColorBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(otherColors), otherColors, GL_STATIC_DRAW);
+
 
     vector<vector<Cell*>> matrix = createFlatMatrix(0.05f, 40, 40);
 //    vector<vector<Cell*>> matrix = createFlatMatrix(0.01f, 200, 200);
 
-
-    std::vector<GLuint> vertexArrayObjects = getAllVertexArrayObjects(matrix);
+    std::vector<GLuint> vertexArrayObjects = getMeshVertexArrayObjects(matrix);
 
 //    GLuint vao = 0;
 //    glGenVertexArrays (1, &vao);
@@ -222,6 +242,9 @@ int main(void) {
 //    glEnableVertexAttribArray(0);
 //    glBindBuffer(GL_ARRAY_BUFFER, otherVbo);
 //    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+//    glEnableVertexAttribArray(1);
+//    glBindBuffer(GL_ARRAY_BUFFER, otherColorBuffer);
+//    glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 0, NULL);
 //    vertexArrayObjects.push_back(otherVao);
 
 
@@ -275,17 +298,19 @@ int main(void) {
     glAttachShader (shader_program, vs);
     glLinkProgram (shader_program);
 
-    /* Loop until the user closes the window */
     glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
 
     glEnable (GL_CULL_FACE); // cull face
     glCullFace (GL_BACK); // cull back face
     glFrontFace (GL_CCW); // GL_CW for clock-wise
+
+    /* Loop until the user closes the window */
     while (!glfwWindowShouldClose (window))
     {
         // wipe the drawing surface clear
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glUseProgram (shader_program);
+
 
         //allows me to use many VertexArrayObjects but draw them in a clean way
         for(GLuint shape : vertexArrayObjects){
@@ -299,9 +324,11 @@ int main(void) {
         glfwPollEvents ();
         // put the stuff we've been drawing onto the display
         glfwSwapBuffers (window);
+        glfwSetMouseButtonCallback(window, mouseButtonCallback);
         if (glfwGetKey (window, GLFW_KEY_ESCAPE)) {
             glfwSetWindowShouldClose (window, 1);
         }
+
     }
 
 

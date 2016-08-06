@@ -54,6 +54,7 @@ private:
 
     Cell* shrink(){
         setSize((float) (getSize() / 2.0));
+        //todo: return
     }
 };
 
