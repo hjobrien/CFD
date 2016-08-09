@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <OpenGL/gl3.h>
+#include <thread>
 #include "GLFW/include/GLFW/glfw3.h"
 #include "Graphics/Cell.h"
 
@@ -17,6 +18,8 @@ using std::vector;
 
 const int appSize = 900;    //my screen height
 
+const int numCellsPerSide = 40;
+const int cellCount = numCellsPerSide * numCellsPerSide;
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -144,7 +147,9 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
     return *allVAOs;
 }
 
-
+void updateCell(Cell cell){
+    cell.update();
+}
 
 
 
@@ -223,8 +228,7 @@ int main(void) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(otherColors), otherColors, GL_STATIC_DRAW);
 
 
-    vector<vector<Cell*>> matrix = createFlatMatrix(0.05f, 40, 40);
-//    vector<vector<Cell*>> matrix = createFlatMatrix(0.01f, 200, 200);
+    vector<vector<Cell*>> matrix = createFlatMatrix((float) (2.0 / numCellsPerSide), numCellsPerSide, numCellsPerSide);
 
     std::vector<GLuint> vertexArrayObjects = getMeshVertexArrayObjects(matrix);
 
@@ -248,7 +252,7 @@ int main(void) {
 //    vertexArrayObjects.push_back(otherVao);
 
 
-
+    //todo: load from file
     const char* vertex_shader =
             "#version 400\n"
 
@@ -262,7 +266,7 @@ int main(void) {
             "  colour = vertex_colour;"
             "  gl_Position = vec4 (vertex_position, 1.0f);"
             "}";
-
+    //todo: load from file
     const char* fragment_shader =
             "#version 400\n"
 
@@ -314,11 +318,9 @@ int main(void) {
 
         //allows me to use many VertexArrayObjects but draw them in a clean way
         for(GLuint shape : vertexArrayObjects){
-            // draw points 0-3 from the currently bound VAO with current in-use shader
+            // draw points 0-4 from the currently bound VAO with current in-use shader
             glBindVertexArray(shape);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4); //todo: 4 here is the number of points that it will draw, that seems to be
-                                                //the wrong number, it should dynamically scale to the length of the array
-                                                // but we dont know it here. if I change this nothing happens
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4); //4 is the number of points it will draw
         }
         // update other events like input handling
         glfwPollEvents ();
@@ -327,6 +329,23 @@ int main(void) {
         glfwSetMouseButtonCallback(window, mouseButtonCallback);
         if (glfwGetKey (window, GLFW_KEY_ESCAPE)) {
             glfwSetWindowShouldClose (window, 1);
+        }
+
+
+//        std::thread c = std::thread(updateCell, *(matrix[0][0]));
+//        c.join();
+        std::thread cellUpdateThreads[cellCount];
+        short counter = 0;
+        for(int i = 0; i < numCellsPerSide; i++){
+            for(int j = 0; j < numCellsPerSide; j++) {
+                Cell c = *matrix[i][j];
+                cellUpdateThreads[counter] = std::thread(updateCell, c);
+                counter++;
+            }
+        }
+
+        for(int i = 0; i < cellCount; i++){
+            cellUpdateThreads[i].join();
         }
 
     }

@@ -24,7 +24,7 @@ Node* Cell::update() {
         return &split();
     }else
     {
-        ++this->density;
+        ++(this->density);
         //TODO: do math here
     }
 }
