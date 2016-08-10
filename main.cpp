@@ -11,7 +11,7 @@
 #include <OpenGL/gl3.h>
 #include "GLFW/include/GLFW/glfw3.h"
 #include "Graphics/Cell.h"
-#include <future>
+//#include <future>
 #include <thread>
 #include <cstdlib>
 
@@ -22,7 +22,7 @@ using std::vector;
 
 const int appSize = 900;    //my screen height
 
-const int numCellsPerSide = 40;
+const int numCellsPerSide = 80;
 const int cellCount = numCellsPerSide * numCellsPerSide;
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -108,11 +108,17 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
             GLuint coordBuffer = 0;
             glGenBuffers(1, &coordBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, coordBuffer);
-            std::vector<float>* points = new std::vector<float>(getCoords(cell));   //todo: clean up memory
+            std::vector<float> cellCoords = getCoords(cell);
+            std::vector<float>* points = new std::vector<float>(cellCoords);   //todo: clean up memory
+            cellCoords.clear();
+            cellCoords.shrink_to_fit();
 //            std::cout << (*points)[0] << " " << (*points)[1] << " " << (*points)[2] << "\n" <<
 //                    (*points)[3] << " " << (*points)[4] << " " << (*points)[5] << "\n" <<
 //                    (*points)[6] << " " << (*points)[7] << " " << (*points)[8] << "\n" <<
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (*points).size(), &((*points)[0]), GL_STATIC_DRAW);
+            points->clear();
+            points->shrink_to_fit();
+
 
             GLuint colorBuffer = 1;
             glGenBuffers(1, &colorBuffer);
@@ -342,13 +348,12 @@ int main(void) {
 
 //        std::thread c = std::thread(updateCell, *(matrix[0][0]));
 //        c.join();
-        std::thread cellUpdateThreads[cellCount];
+//        std::thread cellUpdateThreads[cellCount];
         short counter = 0;
         for(int i = 0; i < numCellsPerSide; i++){
             for(int j = 0; j < numCellsPerSide; j++) {
 //                Cell c = *(matrix[i][j]);
-//                cellUpdateThreads[counter] = std::thread(updateCell, c);
-//                matrix[i][j] = updateCell(c);
+//                cellUpdateThreads[counter] = std::thread(updateCell, *matrix[i][j]);
                 updateCell(*matrix[i][j]);
                 counter++;
             }
@@ -357,17 +362,10 @@ int main(void) {
 //        for(int i = 0; i < cellCount; i++){
 //            cellUpdateThreads[i].join();
 //        }
-//        std::cout << matrix[10][10]->getDensity() << "\n";
-//        std::packaged_task<std::vector<GLuint>()> getUpdatedMesh([&matrix](){
         vertexArrayObjects.clear();
-        std::vector<GLuint> temp;
-        vertexArrayObjects.swap(temp);
-             vertexArrayObjects = getMeshVertexArrayObjects(matrix);
-//        }); // wrap the function
-//        std::future<std::vector<GLuint>> futureMesh = getUpdatedMesh.get_future();
-//        std::thread(std::move(getUpdatedMesh)).detach();
-//
-//        vertexArrayObjects = futureMesh.get();
+        vertexArrayObjects.shrink_to_fit();
+        vertexArrayObjects = getMeshVertexArrayObjects(matrix);
+
 
     }
 
