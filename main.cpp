@@ -6,13 +6,17 @@
 
 
 
-#include <cstdlib>
 #include <iostream>
 #include <vector>
 #include <OpenGL/gl3.h>
-#include <thread>
 #include "GLFW/include/GLFW/glfw3.h"
 #include "Graphics/Cell.h"
+#include <future>
+#include <thread>
+#include <cstdlib>
+
+
+
 
 using std::vector;
 
@@ -91,17 +95,20 @@ const std::vector<float>& getCoords(Cell* cell){
 //}
 
 
-const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>> matrix)
+const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>>& matrix)
 {
     vector<GLuint>* allVAOs = new vector<GLuint>;
-    for(vector<Cell*> row : matrix)
+    for(int i = 0; i < matrix.size(); i++)
     {
-        for (Cell *cell : row)
+        for (int j = 0; j < (matrix[i]).size(); j++)
         {
+            Cell* cell = matrix[i][j];
+
+
             GLuint coordBuffer = 0;
             glGenBuffers(1, &coordBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, coordBuffer);
-            std::vector<float>* points = new std::vector<float>(getCoords(cell));
+            std::vector<float>* points = new std::vector<float>(getCoords(cell));   //todo: clean up memory
 //            std::cout << (*points)[0] << " " << (*points)[1] << " " << (*points)[2] << "\n" <<
 //                    (*points)[3] << " " << (*points)[4] << " " << (*points)[5] << "\n" <<
 //                    (*points)[6] << " " << (*points)[7] << " " << (*points)[8] << "\n" <<
@@ -147,8 +154,9 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
     return *allVAOs;
 }
 
-void updateCell(Cell cell){
+Cell* updateCell(Cell& cell){
     cell.update();
+    return &cell;
 }
 
 
@@ -158,7 +166,7 @@ int main(void) {
 
     GLFWwindow *window;
 
-    /* Initialize the library */
+//    Initialize the library
     if (!glfwInit()) {
         return -1;
     }
@@ -338,15 +346,28 @@ int main(void) {
         short counter = 0;
         for(int i = 0; i < numCellsPerSide; i++){
             for(int j = 0; j < numCellsPerSide; j++) {
-                Cell c = *matrix[i][j];
-                cellUpdateThreads[counter] = std::thread(updateCell, c);
+//                Cell c = *(matrix[i][j]);
+//                cellUpdateThreads[counter] = std::thread(updateCell, c);
+//                matrix[i][j] = updateCell(c);
+                updateCell(*matrix[i][j]);
                 counter++;
             }
         }
 
-        for(int i = 0; i < cellCount; i++){
-            cellUpdateThreads[i].join();
-        }
+//        for(int i = 0; i < cellCount; i++){
+//            cellUpdateThreads[i].join();
+//        }
+//        std::cout << matrix[10][10]->getDensity() << "\n";
+//        std::packaged_task<std::vector<GLuint>()> getUpdatedMesh([&matrix](){
+        vertexArrayObjects.clear();
+        std::vector<GLuint> temp;
+        vertexArrayObjects.swap(temp);
+             vertexArrayObjects = getMeshVertexArrayObjects(matrix);
+//        }); // wrap the function
+//        std::future<std::vector<GLuint>> futureMesh = getUpdatedMesh.get_future();
+//        std::thread(std::move(getUpdatedMesh)).detach();
+//
+//        vertexArrayObjects = futureMesh.get();
 
     }
 

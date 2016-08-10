@@ -18,7 +18,7 @@ public:
 
     Container(Node* topLeft, Node* topRight, Node* bottomRight, Node* bottomLeft);
 
-    Node* update();
+    void update();
 
     bool canMerge();
 

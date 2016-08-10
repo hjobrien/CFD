@@ -19,7 +19,7 @@ public:
     Cell(float sideLength, float topLeftX, float topLeftY, double density);
 
 
-    Node* update();
+    void update();
 
     Container& split();
 
@@ -30,7 +30,9 @@ public:
 
     std::vector<double> getRgb();
 
-
+    double getDensity(){
+        return this->density;
+    }
 
     virtual Cell* clone() const
     {

@@ -18,7 +18,7 @@ struct clonable {
 class Node : public clonable{
 
 public:
-    virtual Node* update() = 0;
+    virtual void update() = 0;
     virtual bool canMerge() = 0;
     virtual Node* clone() const = 0;
     virtual std::string toString() = 0;

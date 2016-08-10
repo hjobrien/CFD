@@ -29,16 +29,16 @@ Cell* Container::merge() {
 }
 
 //order of updates doesnt matter, order only matters when data gets shifted from one cell to the next
-Node* Container::update() {
+void Container::update() {
     Node* updatedTL = new Cell(0, 0, 0);//this->topLeft->update();
     Node* updatedTR = new Cell(0, 0, 0);//this->topRight->update();
     Node* updatedBR = new Cell(0, 0, 0);//this->bottomRight->update();
     Node* updatedBL = new Cell(0, 0, 0);//this->bottomLeft->update();
     if(updatedTL->canMerge() && updatedTR->canMerge() && updatedBR->canMerge() && updatedBL->canMerge())
     {
-        return merge();
+//        return merge();
     }
-    return 0;
+//    return 0;
 
 }
 

@@ -19,14 +19,14 @@ Container& Cell::split() {
     return *c;
 }
 
-Node* Cell::update() {
-    if(willSplit){
-        return &split();
-    }else
-    {
-        ++(this->density);
+void Cell::update() {
+//    if(willSplit){
+//        return &split();
+//    }else
+//    {
+        (this->density) += 0.05;
         //TODO: do math here
-    }
+//    }
 }
 
 bool Cell::getWillSplit() {
@@ -42,6 +42,9 @@ Cell *Cell::cloneToSmallerCell() {
 }
 
 std::vector<double> Cell::getRgb() {
+    this->h = density * 265 / 360;
+    this->s = 1;
+    this->l = 0.5;
     return colorConverter::hslToRgb(h, s, l);
 }
 
