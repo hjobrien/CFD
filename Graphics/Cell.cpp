@@ -24,7 +24,7 @@ void Cell::update() {
 //        return &split();
 //    }else
 //    {
-        (this->density) += 0.05;
+        this->density += 0.05;
         //TODO: do math here
 //    }
 }

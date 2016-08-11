@@ -11,18 +11,16 @@
 #include <OpenGL/gl3.h>
 #include "GLFW/include/GLFW/glfw3.h"
 #include "Graphics/Cell.h"
-//#include <future>
 #include <thread>
-#include <cstdlib>
 
 
 
 
 using std::vector;
 
-const int appSize = 900;    //my screen height
+//const int appSize = 900;    //my screen height
 
-const int numCellsPerSide = 80;
+const int numCellsPerSide = 40;
 const int cellCount = numCellsPerSide * numCellsPerSide;
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
@@ -160,9 +158,9 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
     return *allVAOs;
 }
 
-Cell* updateCell(Cell& cell){
-    cell.update();
-    return &cell;
+Cell* updateCell(Cell* cell){
+    cell->update();
+    return &(*cell);
 }
 
 
@@ -348,20 +346,19 @@ int main(void) {
 
 //        std::thread c = std::thread(updateCell, *(matrix[0][0]));
 //        c.join();
-//        std::thread cellUpdateThreads[cellCount];
+        std::thread cellUpdateThreads[cellCount];
         short counter = 0;
         for(int i = 0; i < numCellsPerSide; i++){
             for(int j = 0; j < numCellsPerSide; j++) {
-//                Cell c = *(matrix[i][j]);
-//                cellUpdateThreads[counter] = std::thread(updateCell, *matrix[i][j]);
-                updateCell(*matrix[i][j]);
+                cellUpdateThreads[counter] = std::thread(updateCell, (matrix[i][j]));
+//                updateCell(*matrix[i][j]);
                 counter++;
             }
         }
 
-//        for(int i = 0; i < cellCount; i++){
-//            cellUpdateThreads[i].join();
-//        }
+        for(int i = 0; i < cellCount; i++){
+            cellUpdateThreads[i].join();
+        }
         vertexArrayObjects.clear();
         vertexArrayObjects.shrink_to_fit();
         vertexArrayObjects = getMeshVertexArrayObjects(matrix);
