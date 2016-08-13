@@ -12,16 +12,15 @@
 #include "GLFW/include/GLFW/glfw3.h"
 #include "Graphics/Cell.h"
 #include <thread>
-
-
+#include <fstream>
 
 
 using std::vector;
 
 //const int appSize = 900;    //my screen height
 
-const int numCellsPerSide = 40;
-const int cellCount = numCellsPerSide * numCellsPerSide;
+const int cellResolution = 40;
+const int cellCount = cellResolution * cellResolution;
 
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
@@ -163,6 +162,44 @@ Cell* updateCell(Cell* cell){
     return &(*cell);
 }
 
+const char* loadShaderFromFile(std::string path){
+
+    //opens file
+    GLuint shaderID = 0;
+    std::string* shaderString = new std::string();
+    std::ifstream sourceFile(path.c_str());
+
+    //load file
+    if(sourceFile){
+        shaderString->assign((std::istreambuf_iterator<char>(sourceFile)), std::istreambuf_iterator<char>());
+    }
+    return shaderString->c_str();
+
+
+}
+
+void printError(GLuint shader){
+
+    GLint maxLength = 0;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+    // The maxLength includes the NULL character
+    std::vector<GLchar> errorLog((unsigned long) maxLength);
+    glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
+
+    for (int i = 0; i < maxLength; i++) {
+        std::cout << errorLog[i];
+    }
+}
+
+void testCompiled(GLuint shader){
+    GLint isCompiled = 0;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
+    if(isCompiled == GL_FALSE) {
+        printError(shader);
+    }
+}
+
 
 
 
@@ -240,78 +277,32 @@ int main(void) {
     glBufferData(GL_ARRAY_BUFFER, sizeof(otherColors), otherColors, GL_STATIC_DRAW);
 
 
-    vector<vector<Cell*>> matrix = createFlatMatrix((float) (2.0 / numCellsPerSide), numCellsPerSide, numCellsPerSide);
+    vector<vector<Cell*>> matrix = createFlatMatrix((float) (2.0 / cellResolution), cellResolution, cellResolution);
 
     std::vector<GLuint> vertexArrayObjects = getMeshVertexArrayObjects(matrix);
 
-//    GLuint vao = 0;
-//    glGenVertexArrays (1, &vao);
-//    glBindVertexArray (vao);
-//    glEnableVertexAttribArray (0);
-//    glBindBuffer (GL_ARRAY_BUFFER, vbo);
-//    glVertexAttribPointer (0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-//    vertexArrayObjects.push_back(vao);
-//
-//    GLuint otherVao = 0;
-//    glGenVertexArrays(1, &otherVao);
-//    glBindVertexArray(otherVao);
-//    glEnableVertexAttribArray(0);
-//    glBindBuffer(GL_ARRAY_BUFFER, otherVbo);
-//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
-//    glEnableVertexAttribArray(1);
-//    glBindBuffer(GL_ARRAY_BUFFER, otherColorBuffer);
-//    glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 0, NULL);
-//    vertexArrayObjects.push_back(otherVao);
 
 
-    //todo: load from file
-    const char* vertex_shader =
-            "#version 400\n"
+    const char* vertex_shader_string = loadShaderFromFile("/Users/Hank/ClionProjects/CFD/Graphics/VertexShader.txt");
 
-            "layout(location = 0) in vec3 vertex_position;"
-            "layout(location = 1) in vec3 vertex_colour;"
+    const char* fragment_shader_string = loadShaderFromFile("/Users/Hank/ClionProjects/CFD/Graphics/FragmentShader.txt");
 
 
-            "out vec3 colour;"
+    GLuint vertex_shader = glCreateShader (GL_VERTEX_SHADER);
+    glShaderSource (vertex_shader, 1, &vertex_shader_string, NULL);
+    glCompileShader (vertex_shader);
+    testCompiled(vertex_shader);
 
-            "void main () {"
-            "  colour = vertex_colour;"
-            "  gl_Position = vec4 (vertex_position, 1.0f);"
-            "}";
-    //todo: load from file
-    const char* fragment_shader =
-            "#version 400\n"
 
-            "in vec3 colour;"
-            "out vec4 frag_colour;"
 
-            "void main () {"
-            "  frag_colour = vec4 (colour, 1.0f);"
-            "}";
-
-//    const char* vertex_shader =
-//            "#version 400\n"
-//                    "in vec3 vp;"
-//                    "void main () {"
-//                    "  gl_Position = vec4 (vp, 1.0);"
-//                    "}";
-//    const char* fragment_shader =
-//            "#version 400\n"
-//                    "out vec4 frag_colour;"
-//                    "void main () {"
-//                    "  frag_colour = vec4 (0.5, 0.0, 0.5, 1.0);"
-//                    "}";
-
-    GLuint vs = glCreateShader (GL_VERTEX_SHADER);
-    glShaderSource (vs, 1, &vertex_shader, NULL);
-    glCompileShader (vs);
-    GLuint fs = glCreateShader (GL_FRAGMENT_SHADER);
-    glShaderSource (fs, 1, &fragment_shader, NULL);
-    glCompileShader (fs);
+    GLuint fragment_shader = glCreateShader (GL_FRAGMENT_SHADER);
+    glShaderSource (fragment_shader, 1, &fragment_shader_string, NULL);
+    glCompileShader (fragment_shader);
+    testCompiled(fragment_shader);
 
     GLuint shader_program = glCreateProgram ();
-    glAttachShader (shader_program, fs);
-    glAttachShader (shader_program, vs);
+    glAttachShader (shader_program, fragment_shader);
+    glAttachShader (shader_program, vertex_shader);
     glLinkProgram (shader_program);
 
     glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
@@ -348,8 +339,8 @@ int main(void) {
 //        c.join();
         std::thread cellUpdateThreads[cellCount];
         short counter = 0;
-        for(int i = 0; i < numCellsPerSide; i++){
-            for(int j = 0; j < numCellsPerSide; j++) {
+        for(int i = 0; i < cellResolution; i++){
+            for(int j = 0; j < cellResolution; j++) {
                 cellUpdateThreads[counter] = std::thread(updateCell, (matrix[i][j]));
 //                updateCell(*matrix[i][j]);
                 counter++;
