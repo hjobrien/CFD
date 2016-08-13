@@ -357,6 +357,10 @@ int main(void) {
 
     }
 
+    glDeleteShader(vertex_shader);
+    delete[] vertex_shader_string;
+    glDeleteShader(fragment_shader);
+    delete[] fragment_shader_string;
 
     glfwTerminate();
     vertexArrayObjects.clear();
