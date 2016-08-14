@@ -16,7 +16,7 @@ public:
 
     Cell(float sideLength, float topLeftX, float topLeftY);
 
-    Cell(float sideLength, float topLeftX, float topLeftY, double density);
+    Cell(float sideLength, float topLeftX, float topLeftY, double density, double velocity, double pressure);
 
 
     void update();
@@ -26,10 +26,18 @@ public:
     bool getWillSplit() const;
     bool canMerge();
 
-    Cell* cloneToSmallerCell();
+//    Cell* cloneToSmallerCell();
 
     double getDensity() const{
         return this->density;
+    }
+
+    double getVelocity() const{
+        return this->velocity;
+    }
+
+    double getPressure() const{
+        return this->pressure;
     }
 
     virtual Cell* clone() const
@@ -50,10 +58,10 @@ private:
         return "Cell";
     }
 
-    Cell* shrink(){
-        setSize((float) (getSize() / 2.0));
-        //todo: return
-    }
+//    Cell* shrink(){
+//        setSize((float) (getSize() / 2.0));
+//        //todo: return
+//    }
 };
 
 

@@ -11,13 +11,21 @@ Cell::Cell(float sideLength, float topLeftX, float topLeftY) {
 
 }
 
+Cell::Cell(float sideLength, float topLeftX, float topLeftY, double density, double velocity, double pressure) {
+    setTopLeft(topLeftX, topLeftY);
+    setSize(sideLength);
+    this->density = density;
+    this->velocity = velocity;
+    this->pressure = pressure;
+}
+
 
 //take cell's state, copy them 4 times by value, store them in 4 new cells and add it to the container
-Container& Cell::split() {
-    Container* c = new Container(this->cloneToSmallerCell(), this->cloneToSmallerCell(), this->cloneToSmallerCell(),
-                                 this->cloneToSmallerCell());
-    return *c;
-}
+//Container& Cell::split() {
+//    Container* c = new Container(this->cloneToSmallerCell(), this->cloneToSmallerCell(), this->cloneToSmallerCell(),
+//                                 this->cloneToSmallerCell());
+//    return *c;
+//}
 
 void Cell::update() {
 //    if(willSplit){
@@ -37,15 +45,11 @@ bool Cell::canMerge() {
     return ableToMerge;
 }
 
-Cell *Cell::cloneToSmallerCell() {
-    return this->clone()->shrink();
-}
+//Cell *Cell::cloneToSmallerCell() {
+//    return this->clone()->shrink();
+//}
 
-Cell::Cell(float sideLength, float topLeftX, float topLeftY, double density) {
-    setTopLeft(topLeftX, topLeftY);
-    setSize(sideLength);
-    this->density = density;
-}
+
 
 
 

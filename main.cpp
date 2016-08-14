@@ -22,6 +22,10 @@ using std::vector;
 const int cellResolution = 40;
 const int cellCount = cellResolution * cellResolution;
 
+enum RenderVar {DENSITY, VELOCITY, PRESSURE};
+
+RenderVar renderStyle = DENSITY;
+
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
@@ -36,9 +40,15 @@ void key_callback (GLFWwindow* window, int key, int scancode, int action, int mo
 {
     if(key == GLFW_KEY_1 && action == GLFW_PRESS){
         //render with density here
+        renderStyle = DENSITY;
     }
     else if(key == GLFW_KEY_2 && action == GLFW_PRESS){
         //render with velocity here
+        renderStyle = VELOCITY;
+    }
+    else if(key == GLFW_KEY_3 && action == GLFW_PRESS){
+        //render with pressure here
+        renderStyle = PRESSURE;
     }
 }
 
@@ -48,8 +58,8 @@ const vector<vector<Cell*>>& createFlatMatrix(float sideLength, int height, int 
     for(int i = 0; i < height; i++){
         vector<Cell*>* row = new vector<Cell*>;
         for(int j = 0; j < width; j++){
-
-            Cell* cell = new Cell(sideLength, sideLength * j, sideLength * i, (i * j) / ((double)width * height));
+            double fillerVal = (i * j) / ((double)width * height);
+            Cell* cell = new Cell(sideLength, sideLength * j, sideLength * i, fillerVal, 1 / fillerVal, 0.5);
             row->push_back(cell);
         }
         matrix->push_back(*row);
@@ -100,8 +110,15 @@ const std::vector<float>& getCoords(Cell* cell) {
 //
 //}
 
-std::vector<double> getRgb(const Cell& cell){
-    double h = cell.getDensity() * 265.0 / 360;
+std::vector<double> getRgb(const Cell& cell, RenderVar renderVar){
+    double h = 0;
+    if(renderVar == DENSITY) {
+        h = cell.getDensity() * 265.0 / 360;
+    }else if(renderVar == VELOCITY){
+        h = cell.getVelocity() * 265.0 / 360;
+    }else if(renderVar == PRESSURE){
+        h = cell.getPressure() * 265.0 / 360;
+    }
     double s = 1;
     double l = 0.5;
     return colorConverter::hslToRgb(h, s, l);
@@ -123,9 +140,6 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
             std::vector<float>* points = new std::vector<float>(cellCoords);   //todo: clean up memory
             cellCoords.clear();
             cellCoords.shrink_to_fit();
-//            std::cout << (*points)[0] << " " << (*points)[1] << " " << (*points)[2] << "\n" <<
-//                    (*points)[3] << " " << (*points)[4] << " " << (*points)[5] << "\n" <<
-//                    (*points)[6] << " " << (*points)[7] << " " << (*points)[8] << "\n" <<
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (*points).size(), &((*points)[0]), GL_STATIC_DRAW);
             points->clear();
             points->shrink_to_fit();
@@ -134,7 +148,7 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
             GLuint colorBuffer = 1;
             glGenBuffers(1, &colorBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-            std::vector<double> rgb = getRgb(*cell_ptr);
+            std::vector<double> rgb = getRgb(*cell_ptr, renderStyle);
             double r = rgb[0];
             double g = rgb[1];
             double b = rgb[2];
