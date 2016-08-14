@@ -22,18 +22,22 @@ using std::vector;
 const int cellResolution = 40;
 const int cellCount = cellResolution * cellResolution;
 
+bool paused = false;
+
 enum RenderVar {DENSITY, VELOCITY, PRESSURE};
 
 RenderVar renderStyle = DENSITY;
 
-void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
-{
-    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
-        double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos); //sets pos values by modifying their references?
-        std::cout << xpos << " " << ypos << "\n";
-    }
-}
+
+////use for mouse events
+//void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+//{
+//    if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS){
+//        double xpos, ypos;
+//        glfwGetCursorPos(window, &xpos, &ypos); //sets pos values by modifying their references?
+//        std::cout << xpos << " " << ypos << "\n";
+//    }
+//}
 
 
 void key_callback (GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -49,6 +53,8 @@ void key_callback (GLFWwindow* window, int key, int scancode, int action, int mo
     else if(key == GLFW_KEY_3 && action == GLFW_PRESS){
         //render with pressure here
         renderStyle = PRESSURE;
+    }else if(key == GLFW_KEY_P && action == GLFW_PRESS){
+        paused = !paused;
     }
 }
 
@@ -59,7 +65,7 @@ const vector<vector<Cell*>>& createFlatMatrix(float sideLength, int height, int 
         vector<Cell*>* row = new vector<Cell*>;
         for(int j = 0; j < width; j++){
             double fillerVal = (i * j) / ((double)width * height);
-            Cell* cell = new Cell(sideLength, sideLength * j, sideLength * i, fillerVal, 1 / fillerVal, 0.5);
+            Cell* cell = new Cell(sideLength, sideLength * j, sideLength * i, fillerVal, 2 * fillerVal, 0.5 * fillerVal);
             row->push_back(cell);
         }
         matrix->push_back(*row);
@@ -300,6 +306,7 @@ int main(void) {
 
 
     glfwSetKeyCallback(window, key_callback);
+//    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
 
     const char* vertex_shader_string = loadShaderFromFile("/Users/Hank/ClionProjects/CFD/Graphics/VertexShader.txt");
@@ -346,31 +353,27 @@ int main(void) {
         glfwPollEvents ();
         // put the stuff we've been drawing onto the display
         glfwSwapBuffers (window);
-        glfwSetMouseButtonCallback(window, mouseButtonCallback);
         if (glfwGetKey (window, GLFW_KEY_ESCAPE)) {
             glfwSetWindowShouldClose (window, 1);
         }
 
-
-//        std::thread c = std::thread(updateCell, *(matrix[0][0]));
-//        c.join();
-        std::thread cellUpdateThreads[cellCount];
-        short counter = 0;
-        for(int i = 0; i < cellResolution; i++){
-            for(int j = 0; j < cellResolution; j++) {
-                cellUpdateThreads[counter] = std::thread(updateCell, (matrix[i][j]));
-//                updateCell(*matrix[i][j]);
-                counter++;
+        if(!paused) {
+            std::thread cellUpdateThreads[cellCount];
+            short counter = 0;
+            for (int i = 0; i < cellResolution; i++) {
+                for (int j = 0; j < cellResolution; j++) {
+                    cellUpdateThreads[counter] = std::thread(updateCell, (matrix[i][j]));
+                    counter++;
+                }
             }
-        }
 
-        for(int i = 0; i < cellCount; i++){
-            cellUpdateThreads[i].join();
+            for (int i = 0; i < cellCount; i++) {
+                cellUpdateThreads[i].join();
+            }
+            vertexArrayObjects.clear();
+            vertexArrayObjects.shrink_to_fit();
+            vertexArrayObjects = getMeshVertexArrayObjects(matrix);
         }
-        vertexArrayObjects.clear();
-        vertexArrayObjects.shrink_to_fit();
-        vertexArrayObjects = getMeshVertexArrayObjects(matrix);
-
 
     }
 

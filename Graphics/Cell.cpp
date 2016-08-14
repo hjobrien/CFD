@@ -33,6 +33,8 @@ void Cell::update() {
 //    }else
 //    {
         this->density += 0.05;
+        this->velocity += 0.05;
+        this->pressure += 0.025;
         //TODO: do math here
 //    }
 }

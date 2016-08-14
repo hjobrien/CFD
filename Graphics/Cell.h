@@ -21,7 +21,7 @@ public:
 
     void update();
 
-    Container& split();
+//    Container& split();
 
     bool getWillSplit() const;
     bool canMerge();
