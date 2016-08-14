@@ -32,8 +32,17 @@ void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 }
 
 
-const vector<vector<Cell*>>& createFlatMatrix(float sideLength, int height, int width)
+void key_callback (GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+    if(key == GLFW_KEY_1 && action == GLFW_PRESS){
+        //render with density here
+    }
+    else if(key == GLFW_KEY_2 && action == GLFW_PRESS){
+        //render with velocity here
+    }
+}
+
+const vector<vector<Cell*>>& createFlatMatrix(float sideLength, int height, int width){
     vector<vector<Cell*>>* matrix = new vector<vector<Cell*>>;
     srand((unsigned int) time(NULL));
     for(int i = 0; i < height; i++){
@@ -48,7 +57,7 @@ const vector<vector<Cell*>>& createFlatMatrix(float sideLength, int height, int 
     return *matrix;
 }
 
-const std::vector<float>& getCoords(Cell* cell){
+const std::vector<float>& getCoords(Cell* cell) {
     float x = cell->getX();
     float y = cell->getY();
     float size = cell->getSize();
@@ -91,21 +100,26 @@ const std::vector<float>& getCoords(Cell* cell){
 //
 //}
 
+std::vector<double> getRgb(const Cell& cell){
+    double h = cell.getDensity() * 265.0 / 360;
+    double s = 1;
+    double l = 0.5;
+    return colorConverter::hslToRgb(h, s, l);
+}
 
-const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>>& matrix)
-{
+const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>>& matrix) {
     vector<GLuint>* allVAOs = new vector<GLuint>;
     for(int i = 0; i < matrix.size(); i++)
     {
         for (int j = 0; j < (matrix[i]).size(); j++)
         {
-            Cell* cell = matrix[i][j];
+            Cell* cell_ptr = matrix[i][j];
 
 
             GLuint coordBuffer = 0;
             glGenBuffers(1, &coordBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, coordBuffer);
-            std::vector<float> cellCoords = getCoords(cell);
+            std::vector<float> cellCoords = getCoords(cell_ptr);
             std::vector<float>* points = new std::vector<float>(cellCoords);   //todo: clean up memory
             cellCoords.clear();
             cellCoords.shrink_to_fit();
@@ -120,7 +134,7 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
             GLuint colorBuffer = 1;
             glGenBuffers(1, &colorBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-            std::vector<double> rgb = cell->getRgb();
+            std::vector<double> rgb = getRgb(*cell_ptr);
             double r = rgb[0];
             double g = rgb[1];
             double b = rgb[2];
@@ -131,11 +145,6 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
                     r, g, b,
                     r, g, b
             };
-//            float colorVals[] = {
-//                    1.0f, 0.0f,  0.0f,
-//                    0.0f, 1.0f,  0.0f,
-//                    0.0f, 0.0f,  1.0f
-//            };
             glBufferData(GL_ARRAY_BUFFER, sizeof(colorVals), colorVals, GL_STATIC_DRAW);
 
 
@@ -157,12 +166,12 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
     return *allVAOs;
 }
 
-Cell* updateCell(Cell* cell){
+Cell* updateCell(Cell* cell) {
     cell->update();
     return &(*cell);
 }
 
-const char* loadShaderFromFile(std::string path){
+const char* loadShaderFromFile(std::string path) {
 
     //opens file
     GLuint shaderID = 0;
@@ -178,25 +187,21 @@ const char* loadShaderFromFile(std::string path){
 
 }
 
-void printError(GLuint shader){
 
-    GLint maxLength = 0;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
-
-    // The maxLength includes the NULL character
-    std::vector<GLchar> errorLog((unsigned long) maxLength);
-    glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
-
-    for (int i = 0; i < maxLength; i++) {
-        std::cout << errorLog[i];
-    }
-}
-
-void testCompiled(GLuint shader){
+void testCompiled(GLuint shader) {
     GLint isCompiled = 0;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &isCompiled);
     if(isCompiled == GL_FALSE) {
-        printError(shader);
+        GLint maxLength = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+        // The maxLength includes the NULL character
+        std::vector<GLchar> errorLog((unsigned long) maxLength);
+        glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
+
+        for (int i = 0; i < maxLength; i++) {
+            std::cout << errorLog[i];
+        }
     }
 }
 
@@ -245,8 +250,6 @@ int main(void) {
              };
 
 
-//    glOrtho(0, 900, 0, 900,-1, 1);
-
     GLuint vbo = 0;
     glGenBuffers (1, &vbo);
     glBindBuffer (GL_ARRAY_BUFFER, vbo);
@@ -282,6 +285,8 @@ int main(void) {
     std::vector<GLuint> vertexArrayObjects = getMeshVertexArrayObjects(matrix);
 
 
+    glfwSetKeyCallback(window, key_callback);
+
 
     const char* vertex_shader_string = loadShaderFromFile("/Users/Hank/ClionProjects/CFD/Graphics/VertexShader.txt");
 
@@ -292,8 +297,6 @@ int main(void) {
     glShaderSource (vertex_shader, 1, &vertex_shader_string, NULL);
     glCompileShader (vertex_shader);
     testCompiled(vertex_shader);
-
-
 
     GLuint fragment_shader = glCreateShader (GL_FRAGMENT_SHADER);
     glShaderSource (fragment_shader, 1, &fragment_shader_string, NULL);

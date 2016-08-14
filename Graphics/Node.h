@@ -21,7 +21,7 @@ public:
     virtual void update() = 0;
     virtual bool canMerge() = 0;
     virtual Node* clone() const = 0;
-    virtual std::string toString() = 0;
+    virtual std::string toString() const = 0;
 
     const std::vector<Node*>& getSubNodesAsList() const;
 

@@ -32,7 +32,7 @@ private:
 
     Cell* merge();
 
-    std::string toString(){
+    std::string toString() const{
         return "Container";
     }
 };

@@ -23,14 +23,12 @@ public:
 
     Container& split();
 
-    bool getWillSplit();
+    bool getWillSplit() const;
     bool canMerge();
 
     Cell* cloneToSmallerCell();
 
-    std::vector<double> getRgb();
-
-    double getDensity(){
+    double getDensity() const{
         return this->density;
     }
 
@@ -43,14 +41,12 @@ private:
     bool ableToMerge = true;
     bool willSplit = true;
 
-    double h, s, l;
-
 
     double density;
     double pressure;
     double velocity;
 
-    std::string toString(){
+    std::string toString() const{
         return "Cell";
     }
 
