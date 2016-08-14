@@ -225,7 +225,23 @@ void testCompiled(GLuint shader) {
     }
 }
 
+void update(std::vector<std::vector<Cell*>>& matrix, std::vector<GLuint>& vertexArrayObjects){
+    std::thread cellUpdateThreads[cellCount];
+    short counter = 0;
+    for (int i = 0; i < cellResolution; i++) {
+        for (int j = 0; j < cellResolution; j++) {
+            cellUpdateThreads[counter] = std::thread(updateCell, (matrix[i][j]));
+            counter++;
+        }
+    }
 
+    for (int i = 0; i < cellCount; i++) {
+        cellUpdateThreads[i].join();
+    }
+    vertexArrayObjects.clear();
+    vertexArrayObjects.shrink_to_fit();
+    vertexArrayObjects = getMeshVertexArrayObjects(matrix);
+}
 
 
 int main(void) {
@@ -260,44 +276,6 @@ int main(void) {
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-
-    float leftPoints[] =
-            {
-                -0.1f,  0.1f,  0.0f,
-                0.2f, 0.2f,  0.0f,
-                0.3f, -0.3f, 0.0f,
-                -0.4f, -0.4f, 0.0f
-             };
-
-
-    GLuint vbo = 0;
-    glGenBuffers (1, &vbo);
-    glBindBuffer (GL_ARRAY_BUFFER, vbo);
-    glBufferData (GL_ARRAY_BUFFER, sizeof(leftPoints), leftPoints, GL_STATIC_DRAW);
-
-    float otherPoints[] =
-            {
-                   0.1f, 0.1f, 0.0f,
-                   0.0f, 0.0f, 0.0f,
-                   -0.1f, 0.1f, 0.0f
-            };
-
-    double otherColors[] =
-            {
-                    1, 1, 1,
-                    1, 1, 1,
-                    1, 1, 1
-            };
-
-    GLuint otherVbo = 1;
-    glGenBuffers(1, &otherVbo);
-    glBindBuffer(GL_ARRAY_BUFFER, otherVbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(otherPoints), otherPoints, GL_STATIC_DRAW);
-
-    GLuint otherColorBuffer = 1;
-    glGenBuffers(1, &otherColorBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, otherColorBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(otherColors), otherColors, GL_STATIC_DRAW);
 
 
     vector<vector<Cell*>> matrix = createFlatMatrix((float) (2.0 / cellResolution), cellResolution, cellResolution);
@@ -358,21 +336,9 @@ int main(void) {
         }
 
         if(!paused) {
-            std::thread cellUpdateThreads[cellCount];
-            short counter = 0;
-            for (int i = 0; i < cellResolution; i++) {
-                for (int j = 0; j < cellResolution; j++) {
-                    cellUpdateThreads[counter] = std::thread(updateCell, (matrix[i][j]));
-                    counter++;
-                }
-            }
+            //updates VAOs based on data in matrix
+            update(matrix, vertexArrayObjects);
 
-            for (int i = 0; i < cellCount; i++) {
-                cellUpdateThreads[i].join();
-            }
-            vertexArrayObjects.clear();
-            vertexArrayObjects.shrink_to_fit();
-            vertexArrayObjects = getMeshVertexArrayObjects(matrix);
         }
 
     }
