@@ -32,12 +32,12 @@ public:
         return this->density;
     }
 
-    double getVelocity() const{
-        return this->velocity;
+    double getXVelocity() const{
+        return this->xVelocity;
     }
 
-    double getPressure() const{
-        return this->pressure;
+    double getInternalEnergy() const{
+        return this->internalEnergy;
     }
 
     virtual Cell* clone() const
@@ -52,7 +52,10 @@ private:
 
     double density;
     double pressure;
-    double velocity;
+    double xVelocity;
+    double yVelocity;
+    double internalEnergy;
+
 
     std::string toString() const{
         return "Cell";

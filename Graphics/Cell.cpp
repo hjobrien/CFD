@@ -11,12 +11,12 @@ Cell::Cell(float sideLength, float topLeftX, float topLeftY) {
 
 }
 
-Cell::Cell(float sideLength, float topLeftX, float topLeftY, double density, double velocity, double pressure) {
+Cell::Cell(float sideLength, float topLeftX, float topLeftY, double density, double xVelocity, double internalEnergy) {
     setTopLeft(topLeftX, topLeftY);
     setSize(sideLength);
     this->density = density;
-    this->velocity = velocity;
-    this->pressure = pressure;
+    this->xVelocity = xVelocity;
+    this->internalEnergy = internalEnergy;
 }
 
 
@@ -33,8 +33,8 @@ void Cell::update() {
 //    }else
 //    {
         this->density += 0.05;
-        this->velocity += 0.05;
-        this->pressure += 0.025;
+        this->xVelocity += 0.05;
+        this->internalEnergy += 0.025;
         //TODO: do math here
 //    }
 }

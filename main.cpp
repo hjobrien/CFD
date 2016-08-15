@@ -40,8 +40,7 @@ RenderVar renderStyle = DENSITY;
 //}
 
 //all params needed for GLFW to work internally
-void key_callback (GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+void key_callback (GLFWwindow* window, int key, int scancode, int action, int mods) {
     if(key == GLFW_KEY_1 && action == GLFW_PRESS){
         //render with density here
         renderStyle = DENSITY;
@@ -122,9 +121,9 @@ std::vector<double> getRgb(const Cell& cell, RenderVar renderVar){
     if(renderVar == DENSITY) {
         h = cell.getDensity() * 265.0 / 360;
     }else if(renderVar == VELOCITY){
-        h = cell.getVelocity() * 265.0 / 360;
+        h = cell.getXVelocity() * 265.0 / 360;
     }else if(renderVar == TEMPRATURE){
-        h = cell.getPressure() * 265.0 / 360;
+        h = cell.getInternalEnergy() * 265.0 / 360;
     }
     double s = 1;
     double l = 0.5;
