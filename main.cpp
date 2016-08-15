@@ -24,7 +24,7 @@ const int cellCount = cellResolution * cellResolution;
 
 bool paused = false;
 
-enum RenderVar {DENSITY, VELOCITY, PRESSURE};
+enum RenderVar {DENSITY, VELOCITY, TEMPRATURE};
 
 RenderVar renderStyle = DENSITY;
 
@@ -39,7 +39,7 @@ RenderVar renderStyle = DENSITY;
 //    }
 //}
 
-
+//all params needed for GLFW to work internally
 void key_callback (GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if(key == GLFW_KEY_1 && action == GLFW_PRESS){
@@ -51,9 +51,10 @@ void key_callback (GLFWwindow* window, int key, int scancode, int action, int mo
         renderStyle = VELOCITY;
     }
     else if(key == GLFW_KEY_3 && action == GLFW_PRESS){
-        //render with pressure here
-        renderStyle = PRESSURE;
-    }else if(key == GLFW_KEY_P && action == GLFW_PRESS){
+        //render with temp here
+        renderStyle = TEMPRATURE;
+    }
+    else if(key == GLFW_KEY_P && action == GLFW_PRESS){
         paused = !paused;
     }
 }
@@ -122,7 +123,7 @@ std::vector<double> getRgb(const Cell& cell, RenderVar renderVar){
         h = cell.getDensity() * 265.0 / 360;
     }else if(renderVar == VELOCITY){
         h = cell.getVelocity() * 265.0 / 360;
-    }else if(renderVar == PRESSURE){
+    }else if(renderVar == TEMPRATURE){
         h = cell.getPressure() * 265.0 / 360;
     }
     double s = 1;
@@ -147,6 +148,8 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
             cellCoords.clear();
             cellCoords.shrink_to_fit();
             glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (*points).size(), &((*points)[0]), GL_STATIC_DRAW);
+
+            //sufficient mem cleaning?
             points->clear();
             points->shrink_to_fit();
 
@@ -194,7 +197,6 @@ Cell* updateCell(Cell* cell) {
 const char* loadShaderFromFile(std::string path) {
 
     //opens file
-    GLuint shaderID = 0;
     std::string* shaderString = new std::string();
     std::ifstream sourceFile(path.c_str());
 
