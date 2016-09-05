@@ -58,33 +58,33 @@ void key_callback (GLFWwindow* window, int key, int scancode, int action, int mo
     }
 }
 
-const vector<vector<Cell*>>& createFlatMatrix(float sideLength, int height, int width){
-    vector<vector<Cell*>>* matrix = new vector<vector<Cell*>>;
+vector<vector<Cell>> createFlatMatrix(float sideLength, int height, int width){
+    vector<vector<Cell>> matrix;
     srand((unsigned int) time(NULL));
     for(int i = 0; i < height; i++){
-        vector<Cell*>* row = new vector<Cell*>;
+        vector<Cell> row;
         for(int j = 0; j < width; j++){
             double fillerVal = (i * j) / ((double)width * height);
-            Cell* cell = new Cell(sideLength, sideLength * j, sideLength * i, fillerVal, 2 * fillerVal, 0.5 * fillerVal);
-            row->push_back(cell);
+            Cell cell (sideLength, sideLength * j, sideLength * i, fillerVal, 2 * fillerVal, 0.5 * fillerVal);
+            row.push_back(cell);
         }
-        matrix->push_back(*row);
+        matrix.push_back(row);
     }
-    return *matrix;
+    return matrix;
 }
 
-const std::vector<float>& getCoords(Cell* cell) {
-    float x = cell->getX();
-    float y = cell->getY();
-    float size = cell->getSize();
-    std::vector<float>* coords = new std::vector<float>;
-    *coords = {
+std::vector<float> getCoords(Cell cell) {
+    float x = cell.getX();
+    float y = cell.getY();
+    float size = cell.getSize();
+    std::vector<float> coords;
+    coords = {
         x - 1, y - 1, 0.0f,
         x - 1 + size, y - 1, 0.0f,
         x - 1 + size, y - 1 + size, 0.0f,
         x - 1, y - 1 + size, 0.0f
     };
-    return *coords;
+    return coords;
 }
 
 //static unsigned int vertexBufferUniqueID = 0;
@@ -130,33 +130,33 @@ std::vector<double> getRgb(const Cell& cell, RenderVar renderVar){
     return colorConverter::hslToRgb(h, s, l);
 }
 
-const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>>& matrix) {
-    vector<GLuint>* allVAOs = new vector<GLuint>;
+const std::vector<GLuint> getMeshVertexArrayObjects(const vector<vector<Cell>>& matrix) {
+    vector<GLuint> allVAOs;
     for(int i = 0; i < matrix.size(); i++)
     {
         for (int j = 0; j < (matrix[i]).size(); j++)
         {
-            Cell* cell_ptr = matrix[i][j];
+            Cell cell = matrix[i][j];
 
 
             GLuint coordBuffer = 0;
             glGenBuffers(1, &coordBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, coordBuffer);
-            std::vector<float> cellCoords = getCoords(cell_ptr);
-            std::vector<float>* points = new std::vector<float>(cellCoords);   //todo: clean up memory
+            std::vector<float> cellCoords = getCoords(cell);
+            std::vector<float> points (cellCoords);
             cellCoords.clear();
             cellCoords.shrink_to_fit();
-            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (*points).size(), &((*points)[0]), GL_STATIC_DRAW);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (points).size(), &((points)[0]), GL_STATIC_DRAW);
 
             //sufficient mem cleaning?
-            points->clear();
-            points->shrink_to_fit();
+            points.clear();
+            points.shrink_to_fit();
 
 
             GLuint colorBuffer = 1;
             glGenBuffers(1, &colorBuffer);
             glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
-            std::vector<double> rgb = getRgb(*cell_ptr, renderStyle);
+            std::vector<double> rgb = getRgb(cell, renderStyle);
             double r = rgb[0];
             double g = rgb[1];
             double b = rgb[2];
@@ -180,30 +180,29 @@ const std::vector<GLuint>& getMeshVertexArrayObjects(const vector<vector<Cell *>
             glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
             glVertexAttribPointer(1, 3, GL_DOUBLE, GL_FALSE, 0, NULL);
 
-            allVAOs->push_back(tempVertexArrayObject);
+            allVAOs.push_back(tempVertexArrayObject);
         }
     }
 
 
-    return *allVAOs;
+    return allVAOs;
 }
 
-Cell* updateCell(Cell* cell) {
-    cell->update();
-    return &(*cell);
+void updateCell(Cell& cell) {
+    cell.update();
 }
 
-const char* loadShaderFromFile(std::string path) {
+std::string loadShaderFromFile(std::string path) {
 
     //opens file
-    std::string* shaderString = new std::string();
+    std::string shaderString;
     std::ifstream sourceFile(path.c_str());
 
     //load file
     if(sourceFile){
-        shaderString->assign((std::istreambuf_iterator<char>(sourceFile)), std::istreambuf_iterator<char>());
+        shaderString.assign((std::istreambuf_iterator<char>(sourceFile)), std::istreambuf_iterator<char>());
     }
-    return shaderString->c_str();
+    return shaderString;
 
 
 }
@@ -226,22 +225,24 @@ void testCompiled(GLuint shader) {
     }
 }
 
-void update(std::vector<std::vector<Cell*>>& matrix, std::vector<GLuint>& vertexArrayObjects){
-    std::thread cellUpdateThreads[cellCount];
-    short counter = 0;
+std::vector<GLuint> update(std::vector<std::vector<Cell>>& matrix, std::vector<GLuint>& vertexArrayObjects){
+//    std::thread cellUpdateThreads[cellCount];
+//    short counter = 0;
     for (int i = 0; i < cellResolution; i++) {
         for (int j = 0; j < cellResolution; j++) {
-            cellUpdateThreads[counter] = std::thread(updateCell, (matrix[i][j]));
-            counter++;
+            matrix[i][j].update();
+//            cellUpdateThreads[counter] = std::thread(updateCell, (matrix[i][j]));
+//            counter++;
         }
     }
 
-    for (int i = 0; i < cellCount; i++) {
-        cellUpdateThreads[i].join();
-    }
-    vertexArrayObjects.clear();
-    vertexArrayObjects.shrink_to_fit();
+//    for (int i = 0; i < cellCount; i++) {
+//        cellUpdateThreads[i].join();
+//    }
+//    vertexArrayObjects.clear();
+//    vertexArrayObjects.shrink_to_fit();
     vertexArrayObjects = getMeshVertexArrayObjects(matrix);
+    return vertexArrayObjects;
 }
 
 
@@ -279,7 +280,7 @@ int main(void) {
 
 
 
-    vector<vector<Cell*>> matrix = createFlatMatrix((float) (2.0 / cellResolution), cellResolution, cellResolution);
+    vector<vector<Cell>> matrix = createFlatMatrix((float) (2.0 / cellResolution), cellResolution, cellResolution);
 
     std::vector<GLuint> vertexArrayObjects = getMeshVertexArrayObjects(matrix);
 
@@ -288,18 +289,19 @@ int main(void) {
 //    glfwSetMouseButtonCallback(window, mouseButtonCallback);
 
 
-    const char* vertex_shader_string = loadShaderFromFile("/Users/Hank/ClionProjects/CFD/Graphics/VertexShader.txt");
+    std::string vertex_shader_string = loadShaderFromFile("/Users/Hank/ClionProjects/CFD/Graphics/VertexShader.txt");
+    const char* vss = vertex_shader_string.c_str();
 
-    const char* fragment_shader_string = loadShaderFromFile("/Users/Hank/ClionProjects/CFD/Graphics/FragmentShader.txt");
-
+    std::string fragment_shader_string = loadShaderFromFile("/Users/Hank/ClionProjects/CFD/Graphics/FragmentShader.txt");
+    const char* fss = fragment_shader_string.c_str();
 
     GLuint vertex_shader = glCreateShader (GL_VERTEX_SHADER);
-    glShaderSource (vertex_shader, 1, &vertex_shader_string, NULL);
+    glShaderSource (vertex_shader, 1, &vss, NULL);
     glCompileShader (vertex_shader);
     testCompiled(vertex_shader);
 
     GLuint fragment_shader = glCreateShader (GL_FRAGMENT_SHADER);
-    glShaderSource (fragment_shader, 1, &fragment_shader_string, NULL);
+    glShaderSource (fragment_shader, 1, &fss, NULL);
     glCompileShader (fragment_shader);
     testCompiled(fragment_shader);
 
@@ -338,16 +340,16 @@ int main(void) {
 
         if(!paused) {
             //updates VAOs based on data in matrix
-            update(matrix, vertexArrayObjects);
+            vertexArrayObjects = update(matrix, vertexArrayObjects);
 
         }
 
     }
 
     glDeleteShader(vertex_shader);
-    delete[] vertex_shader_string;
+//    delete[] vertex_shader_string;
     glDeleteShader(fragment_shader);
-    delete[] fragment_shader_string;
+//    delete[] fragment_shader_string;
 
     glfwTerminate();
     vertexArrayObjects.clear();
